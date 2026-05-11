@@ -1,409 +1,671 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>5Clipa Command Centre PRO | Equilibrio Elite</title>
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
-<style>
-:root{
-    --primary:#0f172a;
-    --secondary:#1e293b;
-    --accent:#16a34a;
-    --danger:#dc2626;
-    --warning:#f59e0b;
-    --bg:#f1f5f9;
-    --card:#ffffff;
-    --text:#0f172a;
-    --muted:#64748b;
-    --border:#dbe2ea;
-    --shadow:0 4px 12px rgba(0,0,0,0.08);
-    --sidebar-width: 260px;
-}
-
-.dark{
-    --primary:#020617;
-    --secondary:#0f172a;
-    --accent:#22c55e;
-    --danger:#ef4444;
-    --warning:#facc15;
-    --bg:#020617;
-    --card:#111827;
-    --text:#f8fafc;
-    --muted:#94a3b8;
-    --border:#1e293b;
-    --shadow:0 4px 12px rgba(0,0,0,0.4);
-}
-
-*{ box-sizing:border-box; margin:0; padding:0; }
-
-body{
-    font-family:'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    background:var(--bg);
-    color:var(--text);
-    display:flex;
-    min-height:100vh;
-    transition: background 0.3s;
-}
-
-/* --- FIXED SIDEBAR LOGIC --- */
-#sidebar{
-    width: var(--sidebar-width);
-    background: var(--primary);
-    color: white;
-    position: fixed;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    padding: 25px;
-    transition: transform 0.3s ease;
-    z-index: 1000;
-    overflow-y: auto;
-}
-
-#main{
-    /* Push content to the right so sidebar doesn't block it */
-    margin-left: var(--sidebar-width); 
-    width: calc(100% - var(--sidebar-width));
-    padding: 25px;
-    transition: margin-left 0.3s ease, width 0.3s ease;
-}
-
-/* --- UI COMPONENTS --- */
-.nav-item{
-    padding:12px;
-    border-radius:8px;
-    margin-bottom:10px;
-    cursor:pointer;
-    transition:0.3s;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.nav-item:hover{ background:rgba(255,255,255,0.08); }
-
-.topbar{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:25px;
-}
-
-.grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fit, minmax(280px,1fr));
-    gap:20px;
-}
-
-.card{
-    background:var(--card);
-    border-radius:14px;
-    padding:20px;
-    box-shadow:var(--shadow);
-    border:1px solid var(--border);
-}
-
-.alert{
-    padding:15px;
-    border-radius:10px;
-    font-weight:600;
-    border-left: 5px solid transparent;
-}
-.alert.warning{ background:#fef3c7; color:#92400e; border-left-color: var(--warning); }
-.alert.danger{ background:#fee2e2; color:#991b1b; border-left-color: var(--danger); }
-.alert.success{ background:#dcfce7; color:#166534; border-left-color: var(--accent); }
-
-input, select{
-    width:100%;
-    padding:12px;
-    border-radius:10px;
-    border:1px solid var(--border);
-    background:var(--card);
-    color:var(--text);
-    margin-top: 5px;
-}
-
-.btn{
-    padding:12px 16px;
-    border-radius:10px;
-    font-weight:600;
-    cursor:pointer;
-    transition:0.3s;
-    border:none;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-.btn-primary{ background:var(--accent); color:white; }
-.btn-secondary{ background:var(--secondary); color:white; }
-.btn-danger{ background:var(--danger); color:white; }
-
-table{ width:100%; border-collapse:collapse; margin-top: 15px; }
-th, td{ padding:14px; border-bottom:1px solid var(--border); text-align:left; }
-th{ background:var(--primary); color:white; font-size: 0.9rem; }
-
-.badge{ padding:6px 12px; border-radius:999px; font-size:12px; font-weight:700; }
-.badge-approved{ background:#dcfce7; color:#166534; }
-.badge-pending{ background:#fef3c7; color:#92400e; }
-
-.toast-container{ position:fixed; top:20px; right:20px; z-index:9999; }
-.toast{
-    background:var(--card);
-    padding:15px;
-    border-radius:10px;
-    box-shadow:var(--shadow);
-    margin-bottom:10px;
-    border-left:5px solid var(--accent);
-    animation:slideIn 0.3s ease;
-}
-
-@keyframes slideIn{ from{ transform:translateX(100%); opacity:0; } to{ transform:translateX(0); opacity:1; } }
-
-/* --- MOBILE RESPONSIVENESS --- */
-.mobile-toggle { display: none; margin-right: 15px; }
-
-@media(max-width: 1024px){
-    #sidebar { transform: translateX(-100%); }
-    #sidebar.show { transform: translateX(0); }
-    #main { margin-left: 0; width: 100%; }
-    .mobile-toggle { display: block; }
-}
-
-#receipt-template { display: none; }
-</style>
-</head>
-<body>
-
-<div id="sidebar">
-    <h2 style="margin-bottom: 5px;">Equilibrio Elite</h2>
-    <p style="font-size: 0.8rem; opacity: 0.8; margin-bottom: 30px;">5Clipa Command Centre PRO</p>
-
-    <div class="nav-item"><i class="fa-solid fa-chart-line"></i> Dashboard</div>
-    <div class="nav-item"><i class="fa-solid fa-users"></i> Applications</div>
-    <div class="nav-item"><i class="fa-solid fa-shield-halved"></i> Compliance</div>
-    <div class="nav-item" onclick="toggleDarkMode()"><i class="fa-solid fa-moon"></i> Toggle Theme</div>
-</div>
-
-<div id="main">
-    <div class="topbar">
-        <div style="display: flex; align-items: center;">
-            <button class="btn btn-secondary mobile-toggle" onclick="toggleSidebar()">
-                <i class="fa-solid fa-bars"></i>
-            </button>
-            <div>
-                <h1>Dashboard</h1>
-                <p id="current-date" style="color: var(--muted); font-size: 0.9rem;"></p>
-            </div>
-        </div>
-        <button class="btn btn-primary" onclick="exportFullReport()">
-            <i class="fa-solid fa-file-pdf"></i> Export Report
-        </button>
-    </div>
-
-    <div class="grid" style="margin-bottom: 25px;">
-        <div class="card">
-            <small style="color: var(--muted)">Total Portfolio</small>
-            <h2 id="loan-value" style="font-size: 1.8rem; margin-top: 5px;">R0</h2>
-        </div>
-        <div id="sars-alert" class="alert">Checking SARS...</div>
-        <div id="ncr-alert" class="alert">Checking NCR...</div>
-    </div>
-
-    <div class="card" style="margin-bottom: 25px;">
-        <h3 style="margin-bottom: 20px;"><i class="fa-solid fa-calculator"></i> New Loan Assessment</h3>
-        <div class="grid">
-            <div class="input-group"><label>Client Name</label><input type="text" id="client-name" placeholder="Full Name"></div>
-            <div class="input-group"><label>SA ID Number</label><input type="text" id="client-id" maxlength="13" placeholder="13 Digits"></div>
-            <div class="input-group"><label>Loan Amount (R)</label><input type="number" id="loan-amount" placeholder="e.g. 5000"></div>
-            <div class="input-group"><label>Term (Months)</label><input type="number" id="loan-term" value="1"></div>
-        </div>
-        <button class="btn btn-primary" style="margin-top: 20px;" onclick="processNewLoan()">
-            Assess & Save Application
-        </button>
-        <div id="calc-output" style="margin-top: 15px;"></div>
-    </div>
-
-    <div class="card">
-        <h3>Recent Applications</h3>
-        <div style="overflow-x: auto;">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Ref</th>
-                        <th>Client</th>
-                        <th>ID Status</th>
-                        <th>Amount</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="application-body"></tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<div class="toast-container" id="toast-container"></div>
-<div id="receipt-template"></div>
+<!-- UPGRADED VERSION USING ONLY YOUR CURRENT GOOGLE SCRIPT BACKEND -->
 
 <script>
-// --- CONFIG & STATE ---
-let applications = JSON.parse(localStorage.getItem('ee_apps')) || [];
 
-// --- 1. LUHN ID VALIDATION ---
-function validateSAID(id) {
-    if (!/^\d{13}$/.test(id)) return false;
-    let sum = 0;
-    for (let i = 0; i < 13; i++) {
-        let n = parseInt(id[i]);
-        if (i % 2 !== 0) {
-            n *= 2;
-            if (n > 9) n -= 9;
-        }
-        sum += n;
+/* =========================================================
+   GOOGLE SHEETS CLOUD CONFIG
+========================================================= */
+
+const API_URL =
+"https://script.google.com/macros/s/AKfycbw_BVBoWr2VNi0gJkgkqShQXFTLugmd-3qN4ORyWKz-tu7CoUkXOcmtsnEALMvaYaU6AA/exec";
+
+const API_KEY = "EE_SECURE_2026_KEY";
+
+/* =========================================================
+   GLOBAL STATE
+========================================================= */
+
+let applications = [];
+
+/* =========================================================
+   INITIALIZATION
+========================================================= */
+
+window.onload = async () => {
+
+    document.getElementById('current-date')
+    .textContent = new Date().toDateString();
+
+    if(localStorage.getItem('ee_dark') === 'true'){
+        document.body.classList.add('dark');
     }
-    return sum % 10 === 0;
+
+    runComplianceChecks();
+
+    await loadApplicationsFromCloud();
+
+    setInterval(async () => {
+
+        await loadApplicationsFromCloud();
+
+    }, 30000);
+
+};
+
+/* =========================================================
+   LOAD APPLICATIONS FROM GOOGLE SHEETS
+========================================================= */
+
+async function loadApplicationsFromCloud(){
+
+    try{
+
+        showToast("Loading cloud data...");
+
+        const response = await fetch(
+            `${API_URL}?key=${API_KEY}&action=read`
+        );
+
+        const result = await response.json();
+
+        if(result.status === "success"){
+
+            applications = result.data || [];
+
+            renderAll();
+
+            showToast("Applications synced ✔️");
+
+        }else{
+
+            showToast(result.message, "danger");
+
+        }
+
+    }catch(error){
+
+        console.error(error);
+
+        showToast("Cloud sync failed", "danger");
+
+    }
+
 }
 
-// --- 2. NCA 2026 CALCULATOR ---
-function calculateNCA(amount, months) {
-    // Initiation: R165 + 10% of amount over R1000 (Capped at R1207.50 for 2026)
-    let initiation = amount <= 1000 ? (amount * 0.15) : (165 + (amount - 1000) * 0.10);
-    initiation = Math.min(initiation, 1207.50);
-    
-    const interest = amount * 0.05 * months; // 5% Monthly Cap
-    const serviceFee = 79.35 * months; // R69 + VAT
-    const total = amount + initiation + interest + serviceFee;
-    
-    return { initiation, interest, serviceFee, total, monthly: total / months };
+/* =========================================================
+   SAVE APPLICATION TO GOOGLE SHEETS
+========================================================= */
+
+async function saveApplicationToCloud(application){
+
+    try{
+
+        const response = await fetch(API_URL, {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                key: API_KEY,
+                action: "create",
+                ...application
+            })
+
+        });
+
+        const result = await response.json();
+
+        if(result.status === "success"){
+
+            showToast("Application saved ✔️");
+
+        }else{
+
+            showToast(result.message, "danger");
+
+        }
+
+    }catch(error){
+
+        console.error(error);
+
+        showToast("Save failed", "danger");
+
+    }
+
 }
 
-// --- 3. CORE LOGIC ---
-function processNewLoan() {
-    const name = document.getElementById('client-name').value;
-    const id = document.getElementById('client-id').value;
-    const amt = parseFloat(document.getElementById('loan-amount').value);
-    const term = parseInt(document.getElementById('loan-term').value);
+/* =========================================================
+   DELETE APPLICATION
+========================================================= */
 
-    if (!name || !id || !amt) return showToast("Please fill in all fields", "danger");
-    
-    const isIdValid = validateSAID(id);
+async function deleteApplication(ref){
+
+    if(!confirm("Delete this application?")){
+        return;
+    }
+
+    try{
+
+        const response = await fetch(API_URL, {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                key: API_KEY,
+                action: "delete",
+                ref
+            })
+
+        });
+
+        const result = await response.json();
+
+        if(result.status === "success"){
+
+            applications =
+            applications.filter(a => a.Ref !== ref);
+
+            renderAll();
+
+            showToast("Application deleted");
+
+        }else{
+
+            showToast(result.message, "danger");
+
+        }
+
+    }catch(error){
+
+        console.error(error);
+
+        showToast("Delete failed", "danger");
+
+    }
+
+}
+
+/* =========================================================
+   PROCESS NEW LOAN
+========================================================= */
+
+async function processNewLoan(){
+
+    const name =
+    document.getElementById('client-name').value.trim();
+
+    const id =
+    document.getElementById('client-id').value.trim();
+
+    const amt =
+    parseFloat(
+        document.getElementById('loan-amount').value
+    );
+
+    const term =
+    parseInt(
+        document.getElementById('loan-term').value
+    );
+
+    if(!name || !id || !amt || !term){
+
+        showToast("Complete all fields", "danger");
+
+        return;
+
+    }
+
+    const idValid = validateSAID(id);
+
+    if(!idValid){
+
+        showToast("Invalid SA ID", "danger");
+
+        return;
+
+    }
+
     const nca = calculateNCA(amt, term);
-    
-    const newApp = {
-        ref: 'EE' + Math.floor(1000 + Math.random() * 9000),
-        name, id, amt, term, 
-        status: isIdValid ? 'Approved' : 'Pending',
-        date: new Date().toLocaleDateString()
+
+    const application = {
+
+        ref:
+        'EE' +
+        Math.floor(
+            100000 + Math.random() * 900000
+        ),
+
+        name,
+        id,
+
+        amount: amt,
+
+        term,
+
+        status: "Approved",
+
+        riskGrade: "B",
+
+        creditScore: 650,
+
+        phone: "",
+
+        date:
+        new Date().toLocaleDateString()
+
     };
 
-    applications.unshift(newApp);
-    localStorage.setItem('ee_apps', JSON.stringify(applications));
-    
-    document.getElementById('calc-output').innerHTML = `
+    await saveApplicationToCloud(application);
+
+    document.getElementById('calc-output')
+    .innerHTML = `
+
         <div class="alert success">
-            <strong>Estimated Installment: R${nca.monthly.toFixed(2)}</strong><br>
-            Total Repayable: R${nca.total.toFixed(2)} (Incl. R${nca.initiation.toFixed(2)} Initiation Fee)
-        </div>`;
-    
-    renderAll();
-    showToast("Application Saved Successfully");
+
+            <strong>
+                Estimated Installment:
+                R${nca.monthly.toFixed(2)}
+            </strong>
+
+            <br><br>
+
+            Total Repayable:
+            R${nca.total.toFixed(2)}
+
+            <br>
+
+            Initiation Fee:
+            R${nca.initiation.toFixed(2)}
+
+            <br>
+
+            Service Fees:
+            R${nca.serviceFee.toFixed(2)}
+
+        </div>
+
+    `;
+
+    await loadApplicationsFromCloud();
+
 }
 
-function renderAll() {
-    const body = document.getElementById('application-body');
-    body.innerHTML = applications.map(app => `
-        <tr>
-            <td>${app.ref}</td>
-            <td>${app.name}</td>
-            <td>${validateSAID(app.id) ? '✅ Valid' : '⚠️ Invalid'}</td>
-            <td>R${app.amt.toLocaleString()}</td>
-            <td><span class="badge ${app.status === 'Approved' ? 'badge-approved' : 'badge-pending'}">${app.status}</span></td>
+/* =========================================================
+   RENDER APPLICATION TABLE
+========================================================= */
+
+function renderAll(){
+
+    const body =
+    document.getElementById('application-body');
+
+    body.innerHTML = '';
+
+    let totalVal = 0;
+
+    applications.forEach(app => {
+
+        const amount =
+        Number(app.Amount || app.amount || 0);
+
+        totalVal += amount;
+
+        const row =
+        document.createElement('tr');
+
+        const status =
+        app.Status || app.status;
+
+        const ref =
+        app.Ref || app.ref;
+
+        const name =
+        app.Name || app.name;
+
+        const id =
+        app.ID || app.id;
+
+        let badge = 'badge-pending';
+
+        if(status === 'Approved'){
+            badge = 'badge-approved';
+        }
+
+        row.innerHTML = `
+
+            <td>${ref}</td>
+
+            <td>${name}</td>
+
             <td>
-                <button class="btn btn-secondary" onclick="generateReceipt('${app.ref}')"><i class="fa-solid fa-file-pdf"></i></button>
+                ${validateSAID(id)
+                ? '✅ Valid'
+                : '⚠️ Invalid'}
             </td>
-        </tr>
-    `).join('');
 
-    const totalVal = applications.reduce((sum, a) => sum + a.amt, 0);
-    document.getElementById('loan-value').textContent = `R${totalVal.toLocaleString()}`;
+            <td>
+                R${amount.toLocaleString()}
+            </td>
+
+            <td>
+                <span class="badge ${badge}">
+                    ${status}
+                </span>
+            </td>
+
+            <td>
+
+                <div style="display:flex;gap:10px;">
+
+                    <button
+                        class="btn btn-secondary"
+                        onclick="generateReceipt('${ref}')"
+                    >
+                        <i class="fa-solid fa-file-pdf"></i>
+                    </button>
+
+                    <button
+                        class="btn btn-danger"
+                        onclick="deleteApplication('${ref}')"
+                    >
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+
+                </div>
+
+            </td>
+
+        `;
+
+        body.appendChild(row);
+
+    });
+
+    document.getElementById('loan-value')
+    .textContent =
+    `R${totalVal.toLocaleString()}`;
+
 }
 
-// --- 4. COMPLIANCE (MONDAY MAY 11, 2026) ---
-function runComplianceChecks() {
-    const today = new Date();
-    const day = today.getDate(); // 11
+/* =========================================================
+   SA ID VALIDATION
+========================================================= */
 
-    const sars = document.getElementById('sars-alert');
-    // Deadline was May 7
-    if (day > 7) {
-        sars.className = "alert danger";
-        sars.innerHTML = `🚨 SARS EMP201 OVERDUE (Deadline: May 7)`;
-    } else {
-        sars.className = "alert success";
-        sars.innerHTML = `✅ EMP201 Filed`;
+function validateSAID(id){
+
+    if(!/^\d{13}$/.test(id)){
+        return false;
     }
 
-    const ncr = document.getElementById('ncr-alert');
-    const ncrDays = 15 - day;
-    ncr.className = ncrDays <= 4 ? "alert danger" : "alert warning";
-    ncr.innerHTML = `📅 NCR Form 39 Due in ${ncrDays} Days (May 15)`;
+    let sum = 0;
+
+    for(let i = 0; i < 13; i++){
+
+        let n = parseInt(id[i]);
+
+        if(i % 2 !== 0){
+
+            n *= 2;
+
+            if(n > 9){
+                n -= 9;
+            }
+
+        }
+
+        sum += n;
+
+    }
+
+    return sum % 10 === 0;
+
 }
 
-// --- 5. UI UTILITIES ---
-function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('show');
+/* =========================================================
+   NCA CALCULATOR
+========================================================= */
+
+function calculateNCA(amount, months){
+
+    let initiation =
+    amount <= 1000
+    ? amount * 0.15
+    : 165 + ((amount - 1000) * 0.10);
+
+    initiation =
+    Math.min(initiation, 1207.50);
+
+    const interest =
+    amount * 0.05 * months;
+
+    const serviceFee =
+    79.35 * months;
+
+    const total =
+    amount +
+    initiation +
+    interest +
+    serviceFee;
+
+    return {
+
+        initiation,
+
+        interest,
+
+        serviceFee,
+
+        total,
+
+        monthly:
+        total / months
+
+    };
+
 }
 
-function toggleDarkMode() {
-    document.body.classList.toggle('dark');
-    localStorage.setItem('ee_dark', document.body.classList.contains('dark'));
+/* =========================================================
+   COMPLIANCE CHECKS
+========================================================= */
+
+function runComplianceChecks(){
+
+    const today = new Date();
+
+    const day = today.getDate();
+
+    const sars =
+    document.getElementById('sars-alert');
+
+    if(day > 7){
+
+        sars.className =
+        "alert danger";
+
+        sars.innerHTML =
+        "🚨 EMP201 OVERDUE";
+
+    }else{
+
+        sars.className =
+        "alert success";
+
+        sars.innerHTML =
+        "✅ EMP201 Filed";
+
+    }
+
+    const ncr =
+    document.getElementById('ncr-alert');
+
+    const diff =
+    15 - day;
+
+    ncr.className =
+    diff <= 4
+    ? "alert danger"
+    : "alert warning";
+
+    ncr.innerHTML =
+    `📅 NCR Form 39 Due In ${diff} Days`;
+
 }
 
-function showToast(msg, type='success') {
-    const container = document.getElementById('toast-container');
-    const t = document.createElement('div');
-    t.className = 'toast';
-    if(type === 'danger') t.style.borderLeftColor = 'var(--danger)';
-    t.textContent = msg;
-    container.appendChild(t);
-    setTimeout(() => t.remove(), 3000);
-}
+/* =========================================================
+   RECEIPT PDF
+========================================================= */
 
-function generateReceipt(ref) {
-    const app = applications.find(a => a.ref === ref);
-    const nca = calculateNCA(app.amt, app.term);
-    const temp = document.getElementById('receipt-template');
+function generateReceipt(ref){
+
+    const app =
+    applications.find(a =>
+        (a.Ref || a.ref) === ref
+    );
+
+    if(!app){
+        return;
+    }
+
+    const amount =
+    Number(app.Amount || app.amount);
+
+    const term =
+    Number(app.Term || app.term);
+
+    const nca =
+    calculateNCA(amount, term);
+
+    const temp =
+    document.getElementById('receipt-template');
+
     temp.style.display = 'block';
+
     temp.innerHTML = `
-        <div style="padding: 40px; font-family: sans-serif; color: #333;">
-            <center><h2>EQUILIBRIO ELITE</h2><p>Registered Credit Provider</p><hr style="margin: 20px 0;"></center>
-            <p><strong>Ref:</strong> ${app.ref} | <strong>Date:</strong> ${app.date}</p>
-            <p><strong>Client:</strong> ${app.name}</p>
-            <p><strong>ID Number:</strong> ${app.id}</p><br>
-            <table style="width: 100%; border: 1px solid #eee;">
-                <tr><td>Principal</td><td>R${app.amt.toFixed(2)}</td></tr>
-                <tr><td>Initiation Fee</td><td>R${nca.initiation.toFixed(2)}</td></tr>
-                <tr><td>Total Interest</td><td>R${nca.interest.toFixed(2)}</td></tr>
-                <tr style="font-weight: bold;"><td>Total Repayable</td><td>R${nca.total.toFixed(2)}</td></tr>
-            </table>
-            <p style="margin-top: 30px; font-size: 0.8rem; opacity: 0.7;">This document is generated for Equilibrio Elite compliance under the NCA and POPIA.</p>
-        </div>`;
-    
-    html2pdf().from(temp).set({ filename: `Receipt_${ref}.pdf` }).save().then(() => temp.style.display = 'none');
+
+        <div
+            style="
+                padding:40px;
+                font-family:Arial;
+                color:#333;
+            "
+        >
+
+            <center>
+
+                <h2>
+                    EQUILIBRIO ELITE
+                </h2>
+
+                <p>
+                    Registered Credit Provider
+                </p>
+
+                <hr style="margin:20px 0;">
+
+            </center>
+
+            <p>
+                <strong>Reference:</strong>
+                ${ref}
+            </p>
+
+            <p>
+                <strong>Client:</strong>
+                ${app.Name || app.name}
+            </p>
+
+            <p>
+                <strong>Loan Amount:</strong>
+                R${amount.toFixed(2)}
+            </p>
+
+            <p>
+                <strong>Total Repayable:</strong>
+                R${nca.total.toFixed(2)}
+            </p>
+
+            <p>
+                <strong>Monthly Instalment:</strong>
+                R${nca.monthly.toFixed(2)}
+            </p>
+
+            <br><br>
+
+            <small>
+                Subject to NCA and POPIA regulations.
+            </small>
+
+        </div>
+
+    `;
+
+    html2pdf()
+    .from(temp)
+    .set({
+        filename: `Receipt_${ref}.pdf`
+    })
+    .save()
+    .then(() => {
+
+        temp.style.display = 'none';
+
+    });
+
 }
 
-window.onload = () => {
-    document.getElementById('current-date').textContent = new Date().toDateString();
-    if(localStorage.getItem('ee_dark') === 'true') document.body.classList.add('dark');
-    runComplianceChecks();
-    renderAll();
-};
-</script>
+/* =========================================================
+   DARK MODE
+========================================================= */
 
-</body>
-</html>
+function toggleDarkMode(){
+
+    document.body.classList.toggle('dark');
+
+    localStorage.setItem(
+        'ee_dark',
+        document.body.classList.contains('dark')
+    );
+
+}
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
+
+function toggleSidebar(){
+
+    document.getElementById('sidebar')
+    .classList.toggle('show');
+
+}
+
+/* =========================================================
+   TOASTS
+========================================================= */
+
+function showToast(msg, type='success'){
+
+    const container =
+    document.getElementById('toast-container');
+
+    const toast =
+    document.createElement('div');
+
+    toast.className = 'toast';
+
+    if(type === 'danger'){
+        toast.style.borderLeftColor =
+        'var(--danger)';
+    }
+
+    toast.textContent = msg;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+
+        toast.remove();
+
+    }, 3000);
+
+}
+
+</script>

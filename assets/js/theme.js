@@ -1,0 +1,2 @@
+toggleDarkMode()
+loadTheme()

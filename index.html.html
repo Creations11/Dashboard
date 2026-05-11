@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5Clipa Command Centre PRO | Equilibrio Elite</title>
+    <!-- Dependencies -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root {
+            --primary: #0f172a; --accent: #16a34a; --danger: #dc2626; --warning: #f59e0b;
+            --bg: #f1f5f9; --card: #ffffff; --text: #0f172a; --border: #dbe2ea;
+        }
+        .dark {
+            --primary: #020617; --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --border: #334155;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); display: flex; transition: 0.3s; margin: 0; min-height: 100vh; }
+        #sidebar { width: 260px; background: var(--primary); color: white; padding: 25px; position: fixed; height: 100vh; }
+        #main { margin-left: 260px; width: calc(100% - 260px); padding: 25px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+        .card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--border); }
+        .alert { padding: 15px; border-radius: 8px; font-weight: 600; margin-bottom: 20px; }
+        .alert.warning { background: #fef3c7; color: #92400e; border-left: 4px solid var(--warning); }
+        .alert.danger { background: #fee2e2; color: #991b1b; border-left: 4px solid var(--danger); }
+        .input-group { margin-bottom: 15px; }
+        input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text); }
+        .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+        .btn-primary { background: var(--accent); color: white; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 14px; text-align: left; border-bottom: 1px solid var(--border); }
+        th { background: var(--primary); color: white; }
+        #receipt-template { width: 600px; padding: 40px; background: white; color: black; display: none; }
+    </style>
+</head>
+<body>
+
+<div id="sidebar">
+    <h2>Equilibrio Elite</h2>
+    <p><i class="fa-solid fa-user-shield"></i> Admin Portal</p>
+    <div style="margin-top:40px;">
+        <div onclick="location.reload()" style="cursor:pointer; margin-bottom:15px;"><i class="fa-solid fa-house"></i> Dashboard</div>
+        <div onclick="toggleDarkMode()" style="cursor:pointer;"><i class="fa-solid fa-moon"></i> Dark Mode</div>
+    </div>
+</div>
+
+<div id="main">
+    <div class="grid">
+        <div id="sars-alert" class="alert">Checking SARS Status...</div>
+        <div id="ncr-alert" class="alert">Checking NCR Status...</div>
+    </div>
+
+    <div class="card">
+        <h3><i class="fa-solid fa-calculator"></i> Smart Assessment (NCA 2026 Rules)</h3>
+        <div class="grid">
+            <div class="input-group"><label>Client Name</label><input type="text" id="client-name"></div>
+            <div class="input-group"><label>ID Number</label><input type="text" id="client-id" maxlength="13"></div>
+            <div class="input-group"><label>Loan Amount (R)</label><input type="number" id="loan-amt"></div>
+            <div class="input-group"><label>Term (Months)</label><input type="number" id="loan-term"></div>
+        </div>
+        <button class="btn btn-primary" onclick="assessLoan()">Run Assessment</button>
+        <div id="calc-output" style="margin-top:20px;"></div>
+    </div>
+
+    <div class="card" style="margin-top:25px;">
+        <h3><i class="fa-solid fa-list-check"></i> Application Ledger</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Ref</th>
+                    <th>Client</th>
+                    <th>ID Status</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="app-body"></tbody>
+        </table>
+    </div>
+</div>
+
+<div id="receipt-template"></div>
+
+<script>
+    let apps = JSON.parse(localStorage.getItem('ee_apps')) || [];
+
+    // --- 1. LUHN ID VALIDATION ---
+    function validateID(id) {
+        if (!/^\d{13}$/.test(id)) return false;
+        let sum = 0;
+        for (let i = 0; i < 13; i++) {
+            let n = parseInt(id[i]);
+            if (i % 2 !== 0) {
+                n *= 2;
+                if (n > 9) n -= 9;
+            }
+            sum += n;
+        }
+        return sum % 10 === 0;
+    }
+
+    // --- 2. UPGRADED NCA 2026 CALCULATIONS ---
+    function assessLoan() {
+        const name = document.getElementById('client-name').value;
+        const id = document.getElementById('client-id').value;
+        const amt = parseFloat(document.getElementById('loan-amt').value);
+        const term = parseInt(document.getElementById('loan-term').value);
+
+        if (!name || !amt || isNaN(amt)) return alert("Please fill all fields.");
+
+        // Initiation: R165 + 10% of amt > R1000 (2026 Cap: R1207.50)
+        let initFee = amt <= 1000 ? (amt * 0.15) : (165 + (amt - 1000) * 0.10);
+        initFee = Math.min(initFee, 1207.50);
+
+        // Interest: Short-term cap 5% monthly
+        const interest = amt * 0.05 * term;
+
+        // Service Fee: R79.35 (VAT Incl)
+        const serviceFee = 79.35 * term;
+        const total = amt + initFee + interest + serviceFee;
+
+        const newApp = { ref: 'EE'+Math.floor(Math.random()*9999), name, id, amt, status: 'Pending' };
+        apps.unshift(newApp);
+        localStorage.setItem('ee_apps', JSON.stringify(apps));
+        
+        document.getElementById('calc-output').innerHTML = `
+            <div class="alert warning">
+                <strong>Monthly Installment: R${(total/term).toFixed(2)}</strong><br>
+                <small>Incl: R${initFee.toFixed(2)} Initiation | R${serviceFee.toFixed(2)} Service Fees</small>
+            </div>`;
+        renderApps();
+    }
+
+    // --- 3. COMPLIANCE ENGINE (MAY 2026) ---
+    function checkCompliance() {
+        const today = new Date();
+        const day = today.getDate();
+
+        // SARS EMP201 - Due 7th
+        const sarsEl = document.getElementById('sars-alert');
+        if (day > 7) {
+            sarsEl.className = "alert danger";
+            sarsEl.innerHTML = "🚨 SARS EMP201 OVERDUE (Due 7 May)";
+        } else {
+            sarsEl.className = "alert warning";
+            sarsEl.innerHTML = `⚠️ EMP201 Due in ${7 - day} days`;
+        }
+
+        // NCR Form 39 - Due 15th
+        const ncrEl = document.getElementById('ncr-alert');
+        const ncrDays = 15 - day;
+        ncrEl.className = ncrDays < 3 ? "alert danger" : "alert warning";
+        ncrEl.innerHTML = `📅 NCR Form 39 Due in ${ncrDays} days`;
+    }
+
+    function renderApps() {
+        const body = document.getElementById('app-body');
+        body.innerHTML = apps.map(app => `
+            <tr>
+                <td>${app.ref}</td>
+                <td>${app.name}</td>
+                <td>${validateID(app.id) ? '✅ Valid' : '❌ Check ID'}</td>
+                <td>R${app.amt}</td>
+                <td><strong>${app.status}</strong></td>
+                <td><button class="btn btn-primary" onclick="exportPDF('${app.ref}')"><i class="fa-solid fa-file-pdf"></i></button></td>
+            </tr>
+        `).join('');
+    }
+
+    function exportPDF(ref) {
+        const app = apps.find(a => a.ref === ref);
+        const temp = document.getElementById('receipt-template');
+        temp.style.display = 'block';
+        temp.innerHTML = `
+            <center><h1>EQUILIBRIO ELITE</h1><p>NCR Provider | Randburg</p><hr></center>
+            <p><strong>Reference:</strong> ${app.ref}</p>
+            <p><strong>Client:</strong> ${app.name}</p>
+            <p><strong>Amount:</strong> R${app.amt}</p>
+            <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+            <br><small>Generated via 5Clipa PRO. NCA & POPIA Compliant.</small>
+        `;
+
+        html2pdf().from(temp).save(`Equilibrio_${ref}.pdf`).then(() => temp.style.display = 'none');
+    }
+
+    function toggleDarkMode() {
+        document.body.classList.toggle('dark');
+        localStorage.setItem('ee_dark', document.body.classList.contains('dark'));
+    }
+
+    window.onload = () => {
+        if(localStorage.getItem('ee_dark') === 'true') document.body.classList.add('dark');
+        checkCompliance();
+        renderApps();
+    };
+</script>
+</body>
+</html>

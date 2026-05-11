@@ -1,199 +1,409 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>5Clipa Command Centre PRO | Equilibrio Elite</title>
-    <!-- Dependencies -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <style>
-        :root {
-            --primary: #0f172a; --accent: #16a34a; --danger: #dc2626; --warning: #f59e0b;
-            --bg: #f1f5f9; --card: #ffffff; --text: #0f172a; --border: #dbe2ea;
-        }
-        .dark {
-            --primary: #020617; --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --border: #334155;
-        }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); display: flex; transition: 0.3s; margin: 0; min-height: 100vh; }
-        #sidebar { width: 260px; background: var(--primary); color: white; padding: 25px; position: fixed; height: 100vh; }
-        #main { margin-left: 260px; width: calc(100% - 260px); padding: 25px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
-        .card { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--border); }
-        .alert { padding: 15px; border-radius: 8px; font-weight: 600; margin-bottom: 20px; }
-        .alert.warning { background: #fef3c7; color: #92400e; border-left: 4px solid var(--warning); }
-        .alert.danger { background: #fee2e2; color: #991b1b; border-left: 4px solid var(--danger); }
-        .input-group { margin-bottom: 15px; }
-        input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--text); }
-        .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; }
-        .btn-primary { background: var(--accent); color: white; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 14px; text-align: left; border-bottom: 1px solid var(--border); }
-        th { background: var(--primary); color: white; }
-        #receipt-template { width: 600px; padding: 40px; background: white; color: black; display: none; }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>5Clipa Command Centre PRO | Equilibrio Elite</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<style>
+:root{
+    --primary:#0f172a;
+    --secondary:#1e293b;
+    --accent:#16a34a;
+    --danger:#dc2626;
+    --warning:#f59e0b;
+    --bg:#f1f5f9;
+    --card:#ffffff;
+    --text:#0f172a;
+    --muted:#64748b;
+    --border:#dbe2ea;
+    --shadow:0 4px 12px rgba(0,0,0,0.08);
+    --sidebar-width: 260px;
+}
+
+.dark{
+    --primary:#020617;
+    --secondary:#0f172a;
+    --accent:#22c55e;
+    --danger:#ef4444;
+    --warning:#facc15;
+    --bg:#020617;
+    --card:#111827;
+    --text:#f8fafc;
+    --muted:#94a3b8;
+    --border:#1e293b;
+    --shadow:0 4px 12px rgba(0,0,0,0.4);
+}
+
+*{ box-sizing:border-box; margin:0; padding:0; }
+
+body{
+    font-family:'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    display:flex;
+    min-height:100vh;
+    transition: background 0.3s;
+}
+
+/* --- FIXED SIDEBAR LOGIC --- */
+#sidebar{
+    width: var(--sidebar-width);
+    background: var(--primary);
+    color: white;
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    padding: 25px;
+    transition: transform 0.3s ease;
+    z-index: 1000;
+    overflow-y: auto;
+}
+
+#main{
+    /* Push content to the right so sidebar doesn't block it */
+    margin-left: var(--sidebar-width); 
+    width: calc(100% - var(--sidebar-width));
+    padding: 25px;
+    transition: margin-left 0.3s ease, width 0.3s ease;
+}
+
+/* --- UI COMPONENTS --- */
+.nav-item{
+    padding:12px;
+    border-radius:8px;
+    margin-bottom:10px;
+    cursor:pointer;
+    transition:0.3s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nav-item:hover{ background:rgba(255,255,255,0.08); }
+
+.topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:25px;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(280px,1fr));
+    gap:20px;
+}
+
+.card{
+    background:var(--card);
+    border-radius:14px;
+    padding:20px;
+    box-shadow:var(--shadow);
+    border:1px solid var(--border);
+}
+
+.alert{
+    padding:15px;
+    border-radius:10px;
+    font-weight:600;
+    border-left: 5px solid transparent;
+}
+.alert.warning{ background:#fef3c7; color:#92400e; border-left-color: var(--warning); }
+.alert.danger{ background:#fee2e2; color:#991b1b; border-left-color: var(--danger); }
+.alert.success{ background:#dcfce7; color:#166534; border-left-color: var(--accent); }
+
+input, select{
+    width:100%;
+    padding:12px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background:var(--card);
+    color:var(--text);
+    margin-top: 5px;
+}
+
+.btn{
+    padding:12px 16px;
+    border-radius:10px;
+    font-weight:600;
+    cursor:pointer;
+    transition:0.3s;
+    border:none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.btn-primary{ background:var(--accent); color:white; }
+.btn-secondary{ background:var(--secondary); color:white; }
+.btn-danger{ background:var(--danger); color:white; }
+
+table{ width:100%; border-collapse:collapse; margin-top: 15px; }
+th, td{ padding:14px; border-bottom:1px solid var(--border); text-align:left; }
+th{ background:var(--primary); color:white; font-size: 0.9rem; }
+
+.badge{ padding:6px 12px; border-radius:999px; font-size:12px; font-weight:700; }
+.badge-approved{ background:#dcfce7; color:#166534; }
+.badge-pending{ background:#fef3c7; color:#92400e; }
+
+.toast-container{ position:fixed; top:20px; right:20px; z-index:9999; }
+.toast{
+    background:var(--card);
+    padding:15px;
+    border-radius:10px;
+    box-shadow:var(--shadow);
+    margin-bottom:10px;
+    border-left:5px solid var(--accent);
+    animation:slideIn 0.3s ease;
+}
+
+@keyframes slideIn{ from{ transform:translateX(100%); opacity:0; } to{ transform:translateX(0); opacity:1; } }
+
+/* --- MOBILE RESPONSIVENESS --- */
+.mobile-toggle { display: none; margin-right: 15px; }
+
+@media(max-width: 1024px){
+    #sidebar { transform: translateX(-100%); }
+    #sidebar.show { transform: translateX(0); }
+    #main { margin-left: 0; width: 100%; }
+    .mobile-toggle { display: block; }
+}
+
+#receipt-template { display: none; }
+</style>
 </head>
 <body>
 
 <div id="sidebar">
-    <h2>Equilibrio Elite</h2>
-    <p><i class="fa-solid fa-user-shield"></i> Admin Portal</p>
-    <div style="margin-top:40px;">
-        <div onclick="location.reload()" style="cursor:pointer; margin-bottom:15px;"><i class="fa-solid fa-house"></i> Dashboard</div>
-        <div onclick="toggleDarkMode()" style="cursor:pointer;"><i class="fa-solid fa-moon"></i> Dark Mode</div>
-    </div>
+    <h2 style="margin-bottom: 5px;">Equilibrio Elite</h2>
+    <p style="font-size: 0.8rem; opacity: 0.8; margin-bottom: 30px;">5Clipa Command Centre PRO</p>
+
+    <div class="nav-item"><i class="fa-solid fa-chart-line"></i> Dashboard</div>
+    <div class="nav-item"><i class="fa-solid fa-users"></i> Applications</div>
+    <div class="nav-item"><i class="fa-solid fa-shield-halved"></i> Compliance</div>
+    <div class="nav-item" onclick="toggleDarkMode()"><i class="fa-solid fa-moon"></i> Toggle Theme</div>
 </div>
 
 <div id="main">
-    <div class="grid">
-        <div id="sars-alert" class="alert">Checking SARS Status...</div>
-        <div id="ncr-alert" class="alert">Checking NCR Status...</div>
+    <div class="topbar">
+        <div style="display: flex; align-items: center;">
+            <button class="btn btn-secondary mobile-toggle" onclick="toggleSidebar()">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <div>
+                <h1>Dashboard</h1>
+                <p id="current-date" style="color: var(--muted); font-size: 0.9rem;"></p>
+            </div>
+        </div>
+        <button class="btn btn-primary" onclick="exportFullReport()">
+            <i class="fa-solid fa-file-pdf"></i> Export Report
+        </button>
+    </div>
+
+    <div class="grid" style="margin-bottom: 25px;">
+        <div class="card">
+            <small style="color: var(--muted)">Total Portfolio</small>
+            <h2 id="loan-value" style="font-size: 1.8rem; margin-top: 5px;">R0</h2>
+        </div>
+        <div id="sars-alert" class="alert">Checking SARS...</div>
+        <div id="ncr-alert" class="alert">Checking NCR...</div>
+    </div>
+
+    <div class="card" style="margin-bottom: 25px;">
+        <h3 style="margin-bottom: 20px;"><i class="fa-solid fa-calculator"></i> New Loan Assessment</h3>
+        <div class="grid">
+            <div class="input-group"><label>Client Name</label><input type="text" id="client-name" placeholder="Full Name"></div>
+            <div class="input-group"><label>SA ID Number</label><input type="text" id="client-id" maxlength="13" placeholder="13 Digits"></div>
+            <div class="input-group"><label>Loan Amount (R)</label><input type="number" id="loan-amount" placeholder="e.g. 5000"></div>
+            <div class="input-group"><label>Term (Months)</label><input type="number" id="loan-term" value="1"></div>
+        </div>
+        <button class="btn btn-primary" style="margin-top: 20px;" onclick="processNewLoan()">
+            Assess & Save Application
+        </button>
+        <div id="calc-output" style="margin-top: 15px;"></div>
     </div>
 
     <div class="card">
-        <h3><i class="fa-solid fa-calculator"></i> Smart Assessment (NCA 2026 Rules)</h3>
-        <div class="grid">
-            <div class="input-group"><label>Client Name</label><input type="text" id="client-name"></div>
-            <div class="input-group"><label>ID Number</label><input type="text" id="client-id" maxlength="13"></div>
-            <div class="input-group"><label>Loan Amount (R)</label><input type="number" id="loan-amt"></div>
-            <div class="input-group"><label>Term (Months)</label><input type="number" id="loan-term"></div>
+        <h3>Recent Applications</h3>
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ref</th>
+                        <th>Client</th>
+                        <th>ID Status</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="application-body"></tbody>
+            </table>
         </div>
-        <button class="btn btn-primary" onclick="assessLoan()">Run Assessment</button>
-        <div id="calc-output" style="margin-top:20px;"></div>
-    </div>
-
-    <div class="card" style="margin-top:25px;">
-        <h3><i class="fa-solid fa-list-check"></i> Application Ledger</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Ref</th>
-                    <th>Client</th>
-                    <th>ID Status</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="app-body"></tbody>
-        </table>
     </div>
 </div>
 
+<div class="toast-container" id="toast-container"></div>
 <div id="receipt-template"></div>
 
 <script>
-    let apps = JSON.parse(localStorage.getItem('ee_apps')) || [];
+// --- CONFIG & STATE ---
+let applications = JSON.parse(localStorage.getItem('ee_apps')) || [];
 
-    // --- 1. LUHN ID VALIDATION ---
-    function validateID(id) {
-        if (!/^\d{13}$/.test(id)) return false;
-        let sum = 0;
-        for (let i = 0; i < 13; i++) {
-            let n = parseInt(id[i]);
-            if (i % 2 !== 0) {
-                n *= 2;
-                if (n > 9) n -= 9;
-            }
-            sum += n;
+// --- 1. LUHN ID VALIDATION ---
+function validateSAID(id) {
+    if (!/^\d{13}$/.test(id)) return false;
+    let sum = 0;
+    for (let i = 0; i < 13; i++) {
+        let n = parseInt(id[i]);
+        if (i % 2 !== 0) {
+            n *= 2;
+            if (n > 9) n -= 9;
         }
-        return sum % 10 === 0;
+        sum += n;
     }
+    return sum % 10 === 0;
+}
 
-    // --- 2. UPGRADED NCA 2026 CALCULATIONS ---
-    function assessLoan() {
-        const name = document.getElementById('client-name').value;
-        const id = document.getElementById('client-id').value;
-        const amt = parseFloat(document.getElementById('loan-amt').value);
-        const term = parseInt(document.getElementById('loan-term').value);
+// --- 2. NCA 2026 CALCULATOR ---
+function calculateNCA(amount, months) {
+    // Initiation: R165 + 10% of amount over R1000 (Capped at R1207.50 for 2026)
+    let initiation = amount <= 1000 ? (amount * 0.15) : (165 + (amount - 1000) * 0.10);
+    initiation = Math.min(initiation, 1207.50);
+    
+    const interest = amount * 0.05 * months; // 5% Monthly Cap
+    const serviceFee = 79.35 * months; // R69 + VAT
+    const total = amount + initiation + interest + serviceFee;
+    
+    return { initiation, interest, serviceFee, total, monthly: total / months };
+}
 
-        if (!name || !amt || isNaN(amt)) return alert("Please fill all fields.");
+// --- 3. CORE LOGIC ---
+function processNewLoan() {
+    const name = document.getElementById('client-name').value;
+    const id = document.getElementById('client-id').value;
+    const amt = parseFloat(document.getElementById('loan-amount').value);
+    const term = parseInt(document.getElementById('loan-term').value);
 
-        // Initiation: R165 + 10% of amt > R1000 (2026 Cap: R1207.50)
-        let initFee = amt <= 1000 ? (amt * 0.15) : (165 + (amt - 1000) * 0.10);
-        initFee = Math.min(initFee, 1207.50);
-
-        // Interest: Short-term cap 5% monthly
-        const interest = amt * 0.05 * term;
-
-        // Service Fee: R79.35 (VAT Incl)
-        const serviceFee = 79.35 * term;
-        const total = amt + initFee + interest + serviceFee;
-
-        const newApp = { ref: 'EE'+Math.floor(Math.random()*9999), name, id, amt, status: 'Pending' };
-        apps.unshift(newApp);
-        localStorage.setItem('ee_apps', JSON.stringify(apps));
-        
-        document.getElementById('calc-output').innerHTML = `
-            <div class="alert warning">
-                <strong>Monthly Installment: R${(total/term).toFixed(2)}</strong><br>
-                <small>Incl: R${initFee.toFixed(2)} Initiation | R${serviceFee.toFixed(2)} Service Fees</small>
-            </div>`;
-        renderApps();
-    }
-
-    // --- 3. COMPLIANCE ENGINE (MAY 2026) ---
-    function checkCompliance() {
-        const today = new Date();
-        const day = today.getDate();
-
-        // SARS EMP201 - Due 7th
-        const sarsEl = document.getElementById('sars-alert');
-        if (day > 7) {
-            sarsEl.className = "alert danger";
-            sarsEl.innerHTML = "🚨 SARS EMP201 OVERDUE (Due 7 May)";
-        } else {
-            sarsEl.className = "alert warning";
-            sarsEl.innerHTML = `⚠️ EMP201 Due in ${7 - day} days`;
-        }
-
-        // NCR Form 39 - Due 15th
-        const ncrEl = document.getElementById('ncr-alert');
-        const ncrDays = 15 - day;
-        ncrEl.className = ncrDays < 3 ? "alert danger" : "alert warning";
-        ncrEl.innerHTML = `📅 NCR Form 39 Due in ${ncrDays} days`;
-    }
-
-    function renderApps() {
-        const body = document.getElementById('app-body');
-        body.innerHTML = apps.map(app => `
-            <tr>
-                <td>${app.ref}</td>
-                <td>${app.name}</td>
-                <td>${validateID(app.id) ? '✅ Valid' : '❌ Check ID'}</td>
-                <td>R${app.amt}</td>
-                <td><strong>${app.status}</strong></td>
-                <td><button class="btn btn-primary" onclick="exportPDF('${app.ref}')"><i class="fa-solid fa-file-pdf"></i></button></td>
-            </tr>
-        `).join('');
-    }
-
-    function exportPDF(ref) {
-        const app = apps.find(a => a.ref === ref);
-        const temp = document.getElementById('receipt-template');
-        temp.style.display = 'block';
-        temp.innerHTML = `
-            <center><h1>EQUILIBRIO ELITE</h1><p>NCR Provider | Randburg</p><hr></center>
-            <p><strong>Reference:</strong> ${app.ref}</p>
-            <p><strong>Client:</strong> ${app.name}</p>
-            <p><strong>Amount:</strong> R${app.amt}</p>
-            <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
-            <br><small>Generated via 5Clipa PRO. NCA & POPIA Compliant.</small>
-        `;
-
-        html2pdf().from(temp).save(`Equilibrio_${ref}.pdf`).then(() => temp.style.display = 'none');
-    }
-
-    function toggleDarkMode() {
-        document.body.classList.toggle('dark');
-        localStorage.setItem('ee_dark', document.body.classList.contains('dark'));
-    }
-
-    window.onload = () => {
-        if(localStorage.getItem('ee_dark') === 'true') document.body.classList.add('dark');
-        checkCompliance();
-        renderApps();
+    if (!name || !id || !amt) return showToast("Please fill in all fields", "danger");
+    
+    const isIdValid = validateSAID(id);
+    const nca = calculateNCA(amt, term);
+    
+    const newApp = {
+        ref: 'EE' + Math.floor(1000 + Math.random() * 9000),
+        name, id, amt, term, 
+        status: isIdValid ? 'Approved' : 'Pending',
+        date: new Date().toLocaleDateString()
     };
+
+    applications.unshift(newApp);
+    localStorage.setItem('ee_apps', JSON.stringify(applications));
+    
+    document.getElementById('calc-output').innerHTML = `
+        <div class="alert success">
+            <strong>Estimated Installment: R${nca.monthly.toFixed(2)}</strong><br>
+            Total Repayable: R${nca.total.toFixed(2)} (Incl. R${nca.initiation.toFixed(2)} Initiation Fee)
+        </div>`;
+    
+    renderAll();
+    showToast("Application Saved Successfully");
+}
+
+function renderAll() {
+    const body = document.getElementById('application-body');
+    body.innerHTML = applications.map(app => `
+        <tr>
+            <td>${app.ref}</td>
+            <td>${app.name}</td>
+            <td>${validateSAID(app.id) ? '✅ Valid' : '⚠️ Invalid'}</td>
+            <td>R${app.amt.toLocaleString()}</td>
+            <td><span class="badge ${app.status === 'Approved' ? 'badge-approved' : 'badge-pending'}">${app.status}</span></td>
+            <td>
+                <button class="btn btn-secondary" onclick="generateReceipt('${app.ref}')"><i class="fa-solid fa-file-pdf"></i></button>
+            </td>
+        </tr>
+    `).join('');
+
+    const totalVal = applications.reduce((sum, a) => sum + a.amt, 0);
+    document.getElementById('loan-value').textContent = `R${totalVal.toLocaleString()}`;
+}
+
+// --- 4. COMPLIANCE (MONDAY MAY 11, 2026) ---
+function runComplianceChecks() {
+    const today = new Date();
+    const day = today.getDate(); // 11
+
+    const sars = document.getElementById('sars-alert');
+    // Deadline was May 7
+    if (day > 7) {
+        sars.className = "alert danger";
+        sars.innerHTML = `🚨 SARS EMP201 OVERDUE (Deadline: May 7)`;
+    } else {
+        sars.className = "alert success";
+        sars.innerHTML = `✅ EMP201 Filed`;
+    }
+
+    const ncr = document.getElementById('ncr-alert');
+    const ncrDays = 15 - day;
+    ncr.className = ncrDays <= 4 ? "alert danger" : "alert warning";
+    ncr.innerHTML = `📅 NCR Form 39 Due in ${ncrDays} Days (May 15)`;
+}
+
+// --- 5. UI UTILITIES ---
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('show');
+}
+
+function toggleDarkMode() {
+    document.body.classList.toggle('dark');
+    localStorage.setItem('ee_dark', document.body.classList.contains('dark'));
+}
+
+function showToast(msg, type='success') {
+    const container = document.getElementById('toast-container');
+    const t = document.createElement('div');
+    t.className = 'toast';
+    if(type === 'danger') t.style.borderLeftColor = 'var(--danger)';
+    t.textContent = msg;
+    container.appendChild(t);
+    setTimeout(() => t.remove(), 3000);
+}
+
+function generateReceipt(ref) {
+    const app = applications.find(a => a.ref === ref);
+    const nca = calculateNCA(app.amt, app.term);
+    const temp = document.getElementById('receipt-template');
+    temp.style.display = 'block';
+    temp.innerHTML = `
+        <div style="padding: 40px; font-family: sans-serif; color: #333;">
+            <center><h2>EQUILIBRIO ELITE</h2><p>Registered Credit Provider</p><hr style="margin: 20px 0;"></center>
+            <p><strong>Ref:</strong> ${app.ref} | <strong>Date:</strong> ${app.date}</p>
+            <p><strong>Client:</strong> ${app.name}</p>
+            <p><strong>ID Number:</strong> ${app.id}</p><br>
+            <table style="width: 100%; border: 1px solid #eee;">
+                <tr><td>Principal</td><td>R${app.amt.toFixed(2)}</td></tr>
+                <tr><td>Initiation Fee</td><td>R${nca.initiation.toFixed(2)}</td></tr>
+                <tr><td>Total Interest</td><td>R${nca.interest.toFixed(2)}</td></tr>
+                <tr style="font-weight: bold;"><td>Total Repayable</td><td>R${nca.total.toFixed(2)}</td></tr>
+            </table>
+            <p style="margin-top: 30px; font-size: 0.8rem; opacity: 0.7;">This document is generated for Equilibrio Elite compliance under the NCA and POPIA.</p>
+        </div>`;
+    
+    html2pdf().from(temp).set({ filename: `Receipt_${ref}.pdf` }).save().then(() => temp.style.display = 'none');
+}
+
+window.onload = () => {
+    document.getElementById('current-date').textContent = new Date().toDateString();
+    if(localStorage.getItem('ee_dark') === 'true') document.body.classList.add('dark');
+    runComplianceChecks();
+    renderAll();
+};
 </script>
+
 </body>
 </html>

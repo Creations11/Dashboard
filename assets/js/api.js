@@ -1,1 +1,4 @@
-
+loadApplications()
+saveApplication()
+deleteApplication()
+updateApplication()

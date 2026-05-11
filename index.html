@@ -1,671 +1,495 @@
-<!-- UPGRADED VERSION USING ONLY YOUR CURRENT GOOGLE SCRIPT BACKEND -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
 
-<script>
+<meta charset="UTF-8" />
 
-/* =========================================================
-   GOOGLE SHEETS CLOUD CONFIG
-========================================================= */
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+/>
 
-const API_URL =
-"https://script.google.com/macros/s/AKfycbw_BVBoWr2VNi0gJkgkqShQXFTLugmd-3qN4ORyWKz-tu7CoUkXOcmtsnEALMvaYaU6AA/exec";
+<title>
+    5Clipa Command Centre PRO
+</title>
 
-const API_KEY = "EE_SECURE_2026_KEY";
+<link
+    rel="stylesheet"
+    href="assets/css/style.css"
+/>
 
-/* =========================================================
-   GLOBAL STATE
-========================================================= */
+<link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+/>
 
-let applications = [];
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-/* =========================================================
-   INITIALIZATION
-========================================================= */
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
-window.onload = async () => {
+</head>
 
-    document.getElementById('current-date')
-    .textContent = new Date().toDateString();
+<body>
 
-    if(localStorage.getItem('ee_dark') === 'true'){
-        document.body.classList.add('dark');
-    }
+<!-- =========================================
+SIDEBAR
+========================================= -->
 
-    runComplianceChecks();
+<div id="sidebar">
 
-    await loadApplicationsFromCloud();
+    <div class="sidebar-header">
 
-    setInterval(async () => {
+        <img
+            src="assets/img/logo.png"
+            alt="Logo"
+            class="logo"
+        />
 
-        await loadApplicationsFromCloud();
+        <h2>
+            Equilibrio Elite
+        </h2>
 
-    }, 30000);
+        <p>
+            5Clipa Command Centre PRO
+        </p>
 
-};
+    </div>
 
-/* =========================================================
-   LOAD APPLICATIONS FROM GOOGLE SHEETS
-========================================================= */
+    <div class="nav-menu">
 
-async function loadApplicationsFromCloud(){
-
-    try{
-
-        showToast("Loading cloud data...");
-
-        const response = await fetch(
-            `${API_URL}?key=${API_KEY}&action=read`
-        );
-
-        const result = await response.json();
-
-        if(result.status === "success"){
-
-            applications = result.data || [];
-
-            renderAll();
-
-            showToast("Applications synced ✔️");
-
-        }else{
-
-            showToast(result.message, "danger");
-
-        }
-
-    }catch(error){
-
-        console.error(error);
-
-        showToast("Cloud sync failed", "danger");
-
-    }
-
-}
-
-/* =========================================================
-   SAVE APPLICATION TO GOOGLE SHEETS
-========================================================= */
-
-async function saveApplicationToCloud(application){
-
-    try{
-
-        const response = await fetch(API_URL, {
-
-            method: "POST",
-
-            headers: {
-                "Content-Type": "application/json"
-            },
-
-            body: JSON.stringify({
-                key: API_KEY,
-                action: "create",
-                ...application
-            })
-
-        });
-
-        const result = await response.json();
-
-        if(result.status === "success"){
-
-            showToast("Application saved ✔️");
-
-        }else{
-
-            showToast(result.message, "danger");
-
-        }
-
-    }catch(error){
-
-        console.error(error);
-
-        showToast("Save failed", "danger");
-
-    }
-
-}
-
-/* =========================================================
-   DELETE APPLICATION
-========================================================= */
-
-async function deleteApplication(ref){
-
-    if(!confirm("Delete this application?")){
-        return;
-    }
-
-    try{
-
-        const response = await fetch(API_URL, {
-
-            method: "POST",
-
-            headers: {
-                "Content-Type": "application/json"
-            },
-
-            body: JSON.stringify({
-                key: API_KEY,
-                action: "delete",
-                ref
-            })
-
-        });
-
-        const result = await response.json();
-
-        if(result.status === "success"){
-
-            applications =
-            applications.filter(a => a.Ref !== ref);
-
-            renderAll();
-
-            showToast("Application deleted");
-
-        }else{
-
-            showToast(result.message, "danger");
-
-        }
-
-    }catch(error){
-
-        console.error(error);
-
-        showToast("Delete failed", "danger");
-
-    }
-
-}
-
-/* =========================================================
-   PROCESS NEW LOAN
-========================================================= */
-
-async function processNewLoan(){
-
-    const name =
-    document.getElementById('client-name').value.trim();
-
-    const id =
-    document.getElementById('client-id').value.trim();
-
-    const amt =
-    parseFloat(
-        document.getElementById('loan-amount').value
-    );
-
-    const term =
-    parseInt(
-        document.getElementById('loan-term').value
-    );
-
-    if(!name || !id || !amt || !term){
-
-        showToast("Complete all fields", "danger");
-
-        return;
-
-    }
-
-    const idValid = validateSAID(id);
-
-    if(!idValid){
-
-        showToast("Invalid SA ID", "danger");
-
-        return;
-
-    }
-
-    const nca = calculateNCA(amt, term);
-
-    const application = {
-
-        ref:
-        'EE' +
-        Math.floor(
-            100000 + Math.random() * 900000
-        ),
-
-        name,
-        id,
-
-        amount: amt,
-
-        term,
-
-        status: "Approved",
-
-        riskGrade: "B",
-
-        creditScore: 650,
-
-        phone: "",
-
-        date:
-        new Date().toLocaleDateString()
-
-    };
-
-    await saveApplicationToCloud(application);
-
-    document.getElementById('calc-output')
-    .innerHTML = `
-
-        <div class="alert success">
-
-            <strong>
-                Estimated Installment:
-                R${nca.monthly.toFixed(2)}
-            </strong>
-
-            <br><br>
-
-            Total Repayable:
-            R${nca.total.toFixed(2)}
-
-            <br>
-
-            Initiation Fee:
-            R${nca.initiation.toFixed(2)}
-
-            <br>
-
-            Service Fees:
-            R${nca.serviceFee.toFixed(2)}
-
+        <div class="nav-item active">
+            <i class="fa-solid fa-chart-line"></i>
+            <span>Dashboard</span>
         </div>
 
-    `;
-
-    await loadApplicationsFromCloud();
-
-}
-
-/* =========================================================
-   RENDER APPLICATION TABLE
-========================================================= */
-
-function renderAll(){
-
-    const body =
-    document.getElementById('application-body');
-
-    body.innerHTML = '';
-
-    let totalVal = 0;
-
-    applications.forEach(app => {
-
-        const amount =
-        Number(app.Amount || app.amount || 0);
-
-        totalVal += amount;
-
-        const row =
-        document.createElement('tr');
-
-        const status =
-        app.Status || app.status;
-
-        const ref =
-        app.Ref || app.ref;
-
-        const name =
-        app.Name || app.name;
-
-        const id =
-        app.ID || app.id;
-
-        let badge = 'badge-pending';
-
-        if(status === 'Approved'){
-            badge = 'badge-approved';
-        }
-
-        row.innerHTML = `
-
-            <td>${ref}</td>
-
-            <td>${name}</td>
-
-            <td>
-                ${validateSAID(id)
-                ? '✅ Valid'
-                : '⚠️ Invalid'}
-            </td>
-
-            <td>
-                R${amount.toLocaleString()}
-            </td>
-
-            <td>
-                <span class="badge ${badge}">
-                    ${status}
-                </span>
-            </td>
-
-            <td>
-
-                <div style="display:flex;gap:10px;">
-
-                    <button
-                        class="btn btn-secondary"
-                        onclick="generateReceipt('${ref}')"
-                    >
-                        <i class="fa-solid fa-file-pdf"></i>
-                    </button>
-
-                    <button
-                        class="btn btn-danger"
-                        onclick="deleteApplication('${ref}')"
-                    >
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-
-                </div>
-
-            </td>
-
-        `;
-
-        body.appendChild(row);
-
-    });
-
-    document.getElementById('loan-value')
-    .textContent =
-    `R${totalVal.toLocaleString()}`;
-
-}
-
-/* =========================================================
-   SA ID VALIDATION
-========================================================= */
-
-function validateSAID(id){
-
-    if(!/^\d{13}$/.test(id)){
-        return false;
-    }
-
-    let sum = 0;
-
-    for(let i = 0; i < 13; i++){
-
-        let n = parseInt(id[i]);
-
-        if(i % 2 !== 0){
-
-            n *= 2;
-
-            if(n > 9){
-                n -= 9;
-            }
-
-        }
-
-        sum += n;
-
-    }
-
-    return sum % 10 === 0;
-
-}
-
-/* =========================================================
-   NCA CALCULATOR
-========================================================= */
-
-function calculateNCA(amount, months){
-
-    let initiation =
-    amount <= 1000
-    ? amount * 0.15
-    : 165 + ((amount - 1000) * 0.10);
-
-    initiation =
-    Math.min(initiation, 1207.50);
-
-    const interest =
-    amount * 0.05 * months;
-
-    const serviceFee =
-    79.35 * months;
-
-    const total =
-    amount +
-    initiation +
-    interest +
-    serviceFee;
-
-    return {
-
-        initiation,
-
-        interest,
-
-        serviceFee,
-
-        total,
-
-        monthly:
-        total / months
-
-    };
-
-}
-
-/* =========================================================
-   COMPLIANCE CHECKS
-========================================================= */
-
-function runComplianceChecks(){
-
-    const today = new Date();
-
-    const day = today.getDate();
-
-    const sars =
-    document.getElementById('sars-alert');
-
-    if(day > 7){
-
-        sars.className =
-        "alert danger";
-
-        sars.innerHTML =
-        "🚨 EMP201 OVERDUE";
-
-    }else{
-
-        sars.className =
-        "alert success";
-
-        sars.innerHTML =
-        "✅ EMP201 Filed";
-
-    }
-
-    const ncr =
-    document.getElementById('ncr-alert');
-
-    const diff =
-    15 - day;
-
-    ncr.className =
-    diff <= 4
-    ? "alert danger"
-    : "alert warning";
-
-    ncr.innerHTML =
-    `📅 NCR Form 39 Due In ${diff} Days`;
-
-}
-
-/* =========================================================
-   RECEIPT PDF
-========================================================= */
-
-function generateReceipt(ref){
-
-    const app =
-    applications.find(a =>
-        (a.Ref || a.ref) === ref
-    );
-
-    if(!app){
-        return;
-    }
-
-    const amount =
-    Number(app.Amount || app.amount);
-
-    const term =
-    Number(app.Term || app.term);
-
-    const nca =
-    calculateNCA(amount, term);
-
-    const temp =
-    document.getElementById('receipt-template');
-
-    temp.style.display = 'block';
-
-    temp.innerHTML = `
+        <div class="nav-item">
+            <i class="fa-solid fa-users"></i>
+            <span>Applications</span>
+        </div>
+
+        <div class="nav-item">
+            <i class="fa-solid fa-file-contract"></i>
+            <span>Compliance</span>
+        </div>
+
+        <div class="nav-item">
+            <i class="fa-solid fa-chart-pie"></i>
+            <span>Analytics</span>
+        </div>
 
         <div
-            style="
-                padding:40px;
-                font-family:Arial;
-                color:#333;
-            "
+            class="nav-item"
+            onclick="toggleDarkMode()"
         >
+            <i class="fa-solid fa-moon"></i>
+            <span>Dark Mode</span>
+        </div>
 
-            <center>
+    </div>
 
-                <h2>
-                    EQUILIBRIO ELITE
-                </h2>
+</div>
 
-                <p>
-                    Registered Credit Provider
-                </p>
+<!-- =========================================
+MAIN CONTENT
+========================================= -->
 
-                <hr style="margin:20px 0;">
+<div id="main">
 
-            </center>
+    <!-- =========================================
+    TOPBAR
+    ========================================= -->
 
-            <p>
-                <strong>Reference:</strong>
-                ${ref}
-            </p>
+    <div class="topbar">
 
-            <p>
-                <strong>Client:</strong>
-                ${app.Name || app.name}
-            </p>
+        <div class="topbar-left">
 
-            <p>
-                <strong>Loan Amount:</strong>
-                R${amount.toFixed(2)}
-            </p>
+            <button
+                class="btn btn-secondary mobile-toggle"
+                onclick="toggleSidebar()"
+            >
+                <i class="fa-solid fa-bars"></i>
+            </button>
 
-            <p>
-                <strong>Total Repayable:</strong>
-                R${nca.total.toFixed(2)}
-            </p>
+            <div>
 
-            <p>
-                <strong>Monthly Instalment:</strong>
-                R${nca.monthly.toFixed(2)}
-            </p>
+                <h1>
+                    Dashboard
+                </h1>
 
-            <br><br>
+                <p id="current-date"></p>
 
-            <small>
-                Subject to NCA and POPIA regulations.
-            </small>
+            </div>
 
         </div>
 
-    `;
+        <div class="topbar-right">
 
-    html2pdf()
-    .from(temp)
-    .set({
-        filename: `Receipt_${ref}.pdf`
-    })
-    .save()
-    .then(() => {
+            <button
+                class="btn btn-primary"
+                onclick="exportFullReport()"
+            >
+                <i class="fa-solid fa-file-pdf"></i>
+                Export Report
+            </button>
 
-        temp.style.display = 'none';
+        </div>
 
-    });
+    </div>
 
-}
+    <!-- =========================================
+    STATS GRID
+    ========================================= -->
 
-/* =========================================================
-   DARK MODE
-========================================================= */
+    <div class="grid stats-grid">
 
-function toggleDarkMode(){
+        <div class="card">
 
-    document.body.classList.toggle('dark');
+            <small>Total Applications</small>
 
-    localStorage.setItem(
-        'ee_dark',
-        document.body.classList.contains('dark')
-    );
+            <h2 id="total-applications">
+                0
+            </h2>
 
-}
+        </div>
 
-/* =========================================================
-   SIDEBAR
-========================================================= */
+        <div class="card">
 
-function toggleSidebar(){
+            <small>Approved Loans</small>
 
-    document.getElementById('sidebar')
-    .classList.toggle('show');
+            <h2 id="approved-loans">
+                0
+            </h2>
 
-}
+        </div>
 
-/* =========================================================
-   TOASTS
-========================================================= */
+        <div class="card">
 
-function showToast(msg, type='success'){
+            <small>Total Portfolio</small>
 
-    const container =
-    document.getElementById('toast-container');
+            <h2 id="loan-value">
+                R0
+            </h2>
 
-    const toast =
-    document.createElement('div');
+        </div>
 
-    toast.className = 'toast';
+        <div class="card">
 
-    if(type === 'danger'){
-        toast.style.borderLeftColor =
-        'var(--danger)';
-    }
+            <small>Pending Reviews</small>
 
-    toast.textContent = msg;
+            <h2 id="pending-loans">
+                0
+            </h2>
 
-    container.appendChild(toast);
+        </div>
 
-    setTimeout(() => {
+    </div>
 
-        toast.remove();
+    <!-- =========================================
+    COMPLIANCE ALERTS
+    ========================================= -->
 
-    }, 3000);
+    <div class="grid compliance-grid">
 
-}
+        <div
+            id="sars-alert"
+            class="alert warning"
+        >
+            Checking SARS...
+        </div>
 
-</script>
+        <div
+            id="ncr-alert"
+            class="alert warning"
+        >
+            Checking NCR...
+        </div>
+
+    </div>
+
+    <!-- =========================================
+    NEW APPLICATION
+    ========================================= -->
+
+    <div class="card application-card">
+
+        <div class="card-header">
+
+            <h3>
+                <i class="fa-solid fa-calculator"></i>
+                New Loan Assessment
+            </h3>
+
+        </div>
+
+        <div class="grid form-grid">
+
+            <div class="input-group">
+
+                <label>
+                    Client Name
+                </label>
+
+                <input
+                    type="text"
+                    id="client-name"
+                    placeholder="Full Name"
+                />
+
+            </div>
+
+            <div class="input-group">
+
+                <label>
+                    South African ID
+                </label>
+
+                <input
+                    type="text"
+                    id="client-id"
+                    maxlength="13"
+                    placeholder="13 Digit ID"
+                />
+
+            </div>
+
+            <div class="input-group">
+
+                <label>
+                    Phone Number
+                </label>
+
+                <input
+                    type="text"
+                    id="client-phone"
+                    placeholder="27XXXXXXXXX"
+                />
+
+            </div>
+
+            <div class="input-group">
+
+                <label>
+                    Loan Amount (R)
+                </label>
+
+                <input
+                    type="number"
+                    id="loan-amount"
+                    placeholder="5000"
+                />
+
+            </div>
+
+            <div class="input-group">
+
+                <label>
+                    Loan Term (Months)
+                </label>
+
+                <input
+                    type="number"
+                    id="loan-term"
+                    value="1"
+                />
+
+            </div>
+
+            <div class="input-group">
+
+                <label>
+                    Monthly Income
+                </label>
+
+                <input
+                    type="number"
+                    id="monthly-income"
+                    placeholder="15000"
+                />
+
+            </div>
+
+            <div class="input-group">
+
+                <label>
+                    Monthly Expenses
+                </label>
+
+                <input
+                    type="number"
+                    id="monthly-expenses"
+                    placeholder="6000"
+                />
+
+            </div>
+
+            <div class="input-group">
+
+                <label>
+                    Credit Score
+                </label>
+
+                <input
+                    type="number"
+                    id="credit-score"
+                    placeholder="650"
+                />
+
+            </div>
+
+            <div class="input-group">
+
+                <label>
+                    Years At Current Job
+                </label>
+
+                <input
+                    type="number"
+                    id="job-years"
+                    placeholder="3"
+                />
+
+            </div>
+
+        </div>
+
+        <div class="action-row">
+
+            <button
+                class="btn btn-primary"
+                onclick="processNewLoan()"
+            >
+                <i class="fa-solid fa-circle-check"></i>
+                Process Application
+            </button>
+
+        </div>
+
+        <div id="calc-output"></div>
+
+    </div>
+
+    <!-- =========================================
+    ANALYTICS
+    ========================================= -->
+
+    <div class="grid analytics-grid">
+
+        <div class="card">
+
+            <h3>
+                Portfolio Analytics
+            </h3>
+
+            <canvas id="portfolioChart"></canvas>
+
+        </div>
+
+        <div class="card">
+
+            <h3>
+                Risk Distribution
+            </h3>
+
+            <canvas id="riskChart"></canvas>
+
+        </div>
+
+    </div>
+
+    <!-- =========================================
+    APPLICATIONS TABLE
+    ========================================= -->
+
+    <div class="card">
+
+        <div class="table-header">
+
+            <h3>
+                Recent Applications
+            </h3>
+
+            <input
+                type="text"
+                id="search-input"
+                placeholder="Search applications..."
+                onkeyup="renderAll()"
+            />
+
+        </div>
+
+        <div class="table-wrapper">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>Ref</th>
+                        <th>Client</th>
+                        <th>ID Status</th>
+                        <th>Risk</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="application-body"></tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- =========================================
+TOASTS
+========================================= -->
+
+<div
+    id="toast-container"
+    class="toast-container"
+></div>
+
+<!-- =========================================
+PDF EXPORT TEMPLATE
+========================================= -->
+
+<div
+    id="receipt-template"
+    style="display:none;"
+></div>
+
+<!-- =========================================
+JAVASCRIPT FILES
+========================================= -->
+
+<script src="assets/js/constants.js"></script>
+
+<script src="assets/js/validation.js"></script>
+
+<script src="assets/js/calculator.js"></script>
+
+<script src="assets/js/api.js"></script>
+
+<script src="assets/js/compliance.js"></script>
+
+<script src="assets/js/pdf.js"></script>
+
+<script src="assets/js/analytics.js"></script>
+
+<script src="assets/js/theme.js"></script>
+
+<script src="assets/js/ui.js"></script>
+
+<script src="assets/js/whatsapp.js"></script>
+
+<script src="assets/js/app.js"></script>
+
+</body>
+</html>

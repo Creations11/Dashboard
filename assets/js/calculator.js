@@ -1,0 +1,3 @@
+calculateNCA()
+calculateInterest()
+calculateFees()

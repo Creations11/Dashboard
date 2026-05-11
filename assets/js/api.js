@@ -1,4 +1,0 @@
-loadApplications()
-saveApplication()
-deleteApplication()
-updateApplication()

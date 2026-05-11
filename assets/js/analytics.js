@@ -1,0 +1,2 @@
+renderLoanChart()
+renderRiskChart()

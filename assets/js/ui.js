@@ -1,0 +1,4 @@
+renderApplications()
+renderStats()
+showToast()
+toggleSidebar()

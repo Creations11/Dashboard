@@ -1,6 +1,6 @@
-const API_URL =
-"https://script.google.com/macros/s/AKfycbw_BVBoWr2VNi0gJkgkqShQXFTLugmd-3qN4ORyWKz-tu7CoUkXOcmtsnEALMvaYaU6AA/exec";
-
-const API_KEY = "EE_SECURE_2026_KEY";
-
-const AUTO_REFRESH_INTERVAL = 30000;
+const CONFIG = {
+    API_URL: "https://script.google.com/macros/s/YOUR_WEB_APP_URL/exec", // ← UPDATE THIS with your real Equilibro Elite API URL
+    API_KEY: "your-super-secret-key-12345-change-this-in-production",
+    COMPANY: "Equilibrio Elite",
+    VERSION: "2.3 Elite"
+};

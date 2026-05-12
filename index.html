@@ -1,495 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
-<meta charset="UTF-8" />
-
-<meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-/>
-
-<title>
-    5Clipa Command Centre PRO
-</title>
-
-<link
-    rel="stylesheet"
-    href="assets/css/style.css"
-/>
-
-<link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-/>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5Clipa Command Centre PRO • Equilibrio Elite</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
-
 <body>
-
-<!-- =========================================
-SIDEBAR
-========================================= -->
-
-<div id="sidebar">
-
-    <div class="sidebar-header">
-
-        <img
-            src="assets/img/logo.png"
-            alt="Logo"
-            class="logo"
-        />
-
-        <h2>
-            Equilibrio Elite
-        </h2>
-
-        <p>
-            5Clipa Command Centre PRO
-        </p>
-
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="logo">
+            <i class="fa-solid fa-scale-balanced"></i>
+            <span>Equilibrio Elite</span>
+        </div>
+        <nav>
+            <a href="#" class="nav-item active" data-tab="0"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+            <a href="#" class="nav-item" data-tab="1"><i class="fa-solid fa-file-circle-plus"></i> New Application</a>
+            <a href="#" class="nav-item" data-tab="2"><i class="fa-solid fa-chart-line"></i> Analytics</a>
+            <a href="#" class="nav-item" data-tab="3"><i class="fa-solid fa-shield-halved"></i> Compliance</a>
+        </nav>
     </div>
 
-    <div class="nav-menu">
+    <!-- Main Content -->
+    <div class="main-content">
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="menu-toggle" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+                <h1 id="page-title">Command Centre</h1>
+            </div>
+            <div class="topbar-right">
+                <button onclick="exportFullReport()" class="btn-elite">
+                    <i class="fa-solid fa-file-pdf"></i> Export Report
+                </button>
+            </div>
+        </header>
 
-        <div class="nav-item active">
-            <i class="fa-solid fa-chart-line"></i>
-            <span>Dashboard</span>
-        </div>
-
-        <div class="nav-item">
-            <i class="fa-solid fa-users"></i>
-            <span>Applications</span>
-        </div>
-
-        <div class="nav-item">
-            <i class="fa-solid fa-file-contract"></i>
-            <span>Compliance</span>
-        </div>
-
-        <div class="nav-item">
-            <i class="fa-solid fa-chart-pie"></i>
-            <span>Analytics</span>
-        </div>
-
-        <div
-            class="nav-item"
-            onclick="toggleDarkMode()"
-        >
-            <i class="fa-solid fa-moon"></i>
-            <span>Dark Mode</span>
-        </div>
-
+        <div id="tab-content"></div>
     </div>
 
-</div>
-
-<!-- =========================================
-MAIN CONTENT
-========================================= -->
-
-<div id="main">
-
-    <!-- =========================================
-    TOPBAR
-    ========================================= -->
-
-    <div class="topbar">
-
-        <div class="topbar-left">
-
-            <button
-                class="btn btn-secondary mobile-toggle"
-                onclick="toggleSidebar()"
-            >
-                <i class="fa-solid fa-bars"></i>
-            </button>
-
-            <div>
-
-                <h1>
-                    Dashboard
-                </h1>
-
-                <p id="current-date"></p>
-
-            </div>
-
-        </div>
-
-        <div class="topbar-right">
-
-            <button
-                class="btn btn-primary"
-                onclick="exportFullReport()"
-            >
-                <i class="fa-solid fa-file-pdf"></i>
-                Export Report
-            </button>
-
-        </div>
-
-    </div>
-
-    <!-- =========================================
-    STATS GRID
-    ========================================= -->
-
-    <div class="grid stats-grid">
-
-        <div class="card">
-
-            <small>Total Applications</small>
-
-            <h2 id="total-applications">
-                0
-            </h2>
-
-        </div>
-
-        <div class="card">
-
-            <small>Approved Loans</small>
-
-            <h2 id="approved-loans">
-                0
-            </h2>
-
-        </div>
-
-        <div class="card">
-
-            <small>Total Portfolio</small>
-
-            <h2 id="loan-value">
-                R0
-            </h2>
-
-        </div>
-
-        <div class="card">
-
-            <small>Pending Reviews</small>
-
-            <h2 id="pending-loans">
-                0
-            </h2>
-
-        </div>
-
-    </div>
-
-    <!-- =========================================
-    COMPLIANCE ALERTS
-    ========================================= -->
-
-    <div class="grid compliance-grid">
-
-        <div
-            id="sars-alert"
-            class="alert warning"
-        >
-            Checking SARS...
-        </div>
-
-        <div
-            id="ncr-alert"
-            class="alert warning"
-        >
-            Checking NCR...
-        </div>
-
-    </div>
-
-    <!-- =========================================
-    NEW APPLICATION
-    ========================================= -->
-
-    <div class="card application-card">
-
-        <div class="card-header">
-
-            <h3>
-                <i class="fa-solid fa-calculator"></i>
-                New Loan Assessment
-            </h3>
-
-        </div>
-
-        <div class="grid form-grid">
-
-            <div class="input-group">
-
-                <label>
-                    Client Name
-                </label>
-
-                <input
-                    type="text"
-                    id="client-name"
-                    placeholder="Full Name"
-                />
-
-            </div>
-
-            <div class="input-group">
-
-                <label>
-                    South African ID
-                </label>
-
-                <input
-                    type="text"
-                    id="client-id"
-                    maxlength="13"
-                    placeholder="13 Digit ID"
-                />
-
-            </div>
-
-            <div class="input-group">
-
-                <label>
-                    Phone Number
-                </label>
-
-                <input
-                    type="text"
-                    id="client-phone"
-                    placeholder="27XXXXXXXXX"
-                />
-
-            </div>
-
-            <div class="input-group">
-
-                <label>
-                    Loan Amount (R)
-                </label>
-
-                <input
-                    type="number"
-                    id="loan-amount"
-                    placeholder="5000"
-                />
-
-            </div>
-
-            <div class="input-group">
-
-                <label>
-                    Loan Term (Months)
-                </label>
-
-                <input
-                    type="number"
-                    id="loan-term"
-                    value="1"
-                />
-
-            </div>
-
-            <div class="input-group">
-
-                <label>
-                    Monthly Income
-                </label>
-
-                <input
-                    type="number"
-                    id="monthly-income"
-                    placeholder="15000"
-                />
-
-            </div>
-
-            <div class="input-group">
-
-                <label>
-                    Monthly Expenses
-                </label>
-
-                <input
-                    type="number"
-                    id="monthly-expenses"
-                    placeholder="6000"
-                />
-
-            </div>
-
-            <div class="input-group">
-
-                <label>
-                    Credit Score
-                </label>
-
-                <input
-                    type="number"
-                    id="credit-score"
-                    placeholder="650"
-                />
-
-            </div>
-
-            <div class="input-group">
-
-                <label>
-                    Years At Current Job
-                </label>
-
-                <input
-                    type="number"
-                    id="job-years"
-                    placeholder="3"
-                />
-
-            </div>
-
-        </div>
-
-        <div class="action-row">
-
-            <button
-                class="btn btn-primary"
-                onclick="processNewLoan()"
-            >
-                <i class="fa-solid fa-circle-check"></i>
-                Process Application
-            </button>
-
-        </div>
-
-        <div id="calc-output"></div>
-
-    </div>
-
-    <!-- =========================================
-    ANALYTICS
-    ========================================= -->
-
-    <div class="grid analytics-grid">
-
-        <div class="card">
-
-            <h3>
-                Portfolio Analytics
-            </h3>
-
-            <canvas id="portfolioChart"></canvas>
-
-        </div>
-
-        <div class="card">
-
-            <h3>
-                Risk Distribution
-            </h3>
-
-            <canvas id="riskChart"></canvas>
-
-        </div>
-
-    </div>
-
-    <!-- =========================================
-    APPLICATIONS TABLE
-    ========================================= -->
-
-    <div class="card">
-
-        <div class="table-header">
-
-            <h3>
-                Recent Applications
-            </h3>
-
-            <input
-                type="text"
-                id="search-input"
-                placeholder="Search applications..."
-                onkeyup="renderAll()"
-            />
-
-        </div>
-
-        <div class="table-wrapper">
-
-            <table>
-
-                <thead>
-
-                    <tr>
-
-                        <th>Ref</th>
-                        <th>Client</th>
-                        <th>ID Status</th>
-                        <th>Risk</th>
-                        <th>Amount</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-
-                    </tr>
-
-                </thead>
-
-                <tbody id="application-body"></tbody>
-
-            </table>
-
-        </div>
-
-    </div>
-
-</div>
-
-<!-- =========================================
-TOASTS
-========================================= -->
-
-<div
-    id="toast-container"
-    class="toast-container"
-></div>
-
-<!-- =========================================
-PDF EXPORT TEMPLATE
-========================================= -->
-
-<div
-    id="receipt-template"
-    style="display:none;"
-></div>
-
-<!-- =========================================
-JAVASCRIPT FILES
-========================================= -->
-
-<script src="assets/js/constants.js"></script>
-
-<script src="assets/js/validation.js"></script>
-
-<script src="assets/js/calculator.js"></script>
-
-<script src="assets/js/api.js"></script>
-
-<script src="assets/js/compliance.js"></script>
-
-<script src="assets/js/pdf.js"></script>
-
-<script src="assets/js/analytics.js"></script>
-
-<script src="assets/js/theme.js"></script>
-
-<script src="assets/js/ui.js"></script>
-
-<script src="assets/js/whatsapp.js"></script>
-
-<script src="assets/js/app.js"></script>
-
+    <!-- Toast -->
+    <div id="toast" class="toast"></div>
+
+    <script src="assets/js/constants.js"></script>
+    <script src="assets/js/validation.js"></script>
+    <script src="assets/js/calculator.js"></script>
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/pdf.js"></script>
+    <script src="assets/js/whatsapp.js"></script>
+    <script src="assets/js/app.js"></script>
 </body>
 </html>

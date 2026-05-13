@@ -1,126 +1,21 @@
-async function loadApplicationsFromCloud(){
+async function fetchApplications(){
 
-    try{
+try{
 
-        const response = await fetch(
-            `${API_URL}?key=${API_KEY}&action=read`
-        );
+const response =
+await fetch(API_URL);
 
-        const result = await response.json();
+const data =
+await response.json();
 
-        if(result.status === "success"){
+return data;
 
-            applications = result.data || [];
+}catch(error){
 
-            renderAll();
+console.error(error);
 
-            renderCharts();
-
-            showToast("Cloud sync successful ✔️");
-
-        }else{
-
-            showToast(result.message, "danger");
-
-        }
-
-    }catch(error){
-
-        console.error(error);
-
-        showToast("Cloud sync failed", "danger");
-
-    }
+return [];
 
 }
-
-async function saveApplicationToCloud(application){
-
-    try{
-
-        const response = await fetch(API_URL, {
-
-            method: "POST",
-
-            headers: {
-                "Content-Type": "application/json"
-            },
-
-            body: JSON.stringify({
-                key: API_KEY,
-                action: "create",
-                ...application
-            })
-
-        });
-
-        const result = await response.json();
-
-        if(result.status === "success"){
-
-            showToast("Application saved ✔️");
-
-        }else{
-
-            showToast(result.message, "danger");
-
-        }
-
-    }catch(error){
-
-        console.error(error);
-
-        showToast("Save failed", "danger");
-
-    }
-
-}
-
-async function deleteApplication(ref){
-
-    try{
-
-        const response = await fetch(API_URL, {
-
-            method: "POST",
-
-            headers: {
-                "Content-Type": "application/json"
-            },
-
-            body: JSON.stringify({
-                key: API_KEY,
-                action: "delete",
-                ref
-            })
-
-        });
-
-        const result = await response.json();
-
-        if(result.status === "success"){
-
-            applications =
-            applications.filter(
-                a => (a.Ref || a.ref) !== ref
-            );
-
-            renderAll();
-
-            showToast("Application deleted ✔️");
-
-        }else{
-
-            showToast(result.message, "danger");
-
-        }
-
-    }catch(error){
-
-        console.error(error);
-
-        showToast("Delete failed", "danger");
-
-    }
 
 }

@@ -3,7 +3,12 @@ function toggleSidebar(){
 const sidebar =
 document.getElementById("sidebar");
 
+const mainContent =
+document.querySelector(".main-content");
+
 sidebar.classList.toggle("active");
+
+mainContent.classList.toggle("expanded");
 
 }
 
@@ -16,11 +21,11 @@ toast.innerText = message;
 
 toast.classList.add("show");
 
-setTimeout(() => {
+setTimeout(()=>{
 
 toast.classList.remove("show");
 
-}, 3000);
+},3000);
 
 }
 
@@ -90,6 +95,42 @@ tabContent.innerHTML = `
 
 </div>
 
+<div class="card">
+
+<h2>
+Recent Applications
+</h2>
+
+<table>
+
+<thead>
+<tr>
+<th>Reference</th>
+<th>Name</th>
+<th>Status</th>
+</tr>
+</thead>
+
+<tbody>
+
+<tr>
+<td>5C-1001</td>
+<td>John Doe</td>
+<td>Pending</td>
+</tr>
+
+<tr>
+<td>5C-1002</td>
+<td>Jane Smith</td>
+<td>Approved</td>
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
 `;
 
 }
@@ -99,8 +140,15 @@ if(index === 1){
 tabContent.innerHTML = `
 
 <div class="card">
-<h2>New Application Queue</h2>
-<p>Applications will appear here.</p>
+
+<h2>
+New Application Queue
+</h2>
+
+<p>
+Applications will appear here.
+</p>
+
 </div>
 
 `;
@@ -112,7 +160,10 @@ if(index === 2){
 tabContent.innerHTML = `
 
 <div class="card">
-<h2>Analytics</h2>
+
+<h2>
+Analytics
+</h2>
 
 <canvas id="analyticsChart"></canvas>
 
@@ -127,9 +178,11 @@ document
 .getElementById("analyticsChart");
 
 new Chart(ctx,{
+
 type:"bar",
 
 data:{
+
 labels:[
 "Mon",
 "Tue",
@@ -139,6 +192,7 @@ labels:[
 ],
 
 datasets:[{
+
 label:"Applications",
 
 data:[
@@ -150,6 +204,7 @@ data:[
 ]
 
 }]
+
 }
 
 });
@@ -163,7 +218,10 @@ if(index === 3){
 tabContent.innerHTML = `
 
 <div class="card">
-<h2>Compliance Centre</h2>
+
+<h2>
+Compliance Centre
+</h2>
 
 <p>
 NCR workflow checks and audit tracking.

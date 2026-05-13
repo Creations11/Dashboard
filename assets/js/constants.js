@@ -1,6 +1,5 @@
-const CONFIG = {
-    API_URL: "https://script.google.com/macros/s/YOUR_WEB_APP_URL/exec", // ← UPDATE THIS with your real Equilibro Elite API URL
-    API_KEY: "your-super-secret-key-12345-change-this-in-production",
-    COMPANY: "Equilibrio Elite",
-    VERSION: "2.3 Elite"
-};
+const API_URL =
+"https://script.google.com/macros/s/AKfycbwpiI5nTk0tNhjAFgORitlG0-Osvv4j48hfTTohbfQ48UGVDuGXO_muSfzceNgHOc3XZQ/exec";
+
+const API_KEY =
+"5CLIPA_SECURE_KEY";
